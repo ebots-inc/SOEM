@@ -852,6 +852,14 @@ int ecx_readPDOmap(ecx_contextt *context, uint16 Slave, uint32 *Osize, uint32 *I
             {
                tSM = 4;
             }
+            if((iSM == 2) && (tSM == 4))
+            {
+               tSM = 3;
+            }
+            if((iSM == 3) && (tSM == 3))
+            {
+               tSM = 4;
+            }
 // end slave bug prevention code
 
             context->slavelist[Slave].SMtype[iSM] = tSM;
@@ -942,6 +950,14 @@ int ecx_readPDOmapCA(ecx_contextt *context, uint16 Slave, int Thread_n, uint32 *
          if((iSM == 2) && (tSM == 2)) // SM2 has type 2 == mailbox out, this is a bug in the slave!
          {
             SMt_bug_add = 1; // try to correct, this works if the types are 0 1 2 3 and should be 1 2 3 4
+         }
+         if((iSM == 2) && (tSM == 4))
+         {
+            tSM = 3;
+         }
+         if((iSM == 3) && (tSM == 3))
+         {
+            tSM = 4;
          }
          if(tSM)
          {

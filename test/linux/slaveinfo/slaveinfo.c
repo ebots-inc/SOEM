@@ -17,7 +17,7 @@
 
 #include "ethercat.h"
 
-char IOmap[4096];
+char IOmap[128];
 ec_ODlistt ODlist;
 ec_OElistt OElist;
 boolean printSDO = FALSE;
