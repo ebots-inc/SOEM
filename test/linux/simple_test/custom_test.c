@@ -117,6 +117,7 @@ void get_input_int16(uint16 slave_no,uint8 module_index, uint16 *val)
    uint8 *data_ptr;
    /* Get the IO map pointer from the ec_slave struct */
    data_ptr = ec_slave[slave_no].inputs;
+   *val = 0;
    /* Move pointer to correct module index */
    data_ptr += module_index * 2;
    /* Read value byte by byte since all targets can't handle misaligned
@@ -131,6 +132,7 @@ void get_input_int16(uint16 slave_no,uint8 module_index, uint16 *val)
 void get_input_int32(uint16 slave_no,uint8 module_index, int32 *val)
 {
    uint8 *data_ptr;
+   *val = 0;
    /* Get the IO map pointer from the ec_slave struct */
    data_ptr = ec_slave[slave_no].inputs;
    /* Move pointer to correct module index */
@@ -153,6 +155,7 @@ void get_output_int32(uint16 slave_no,uint8 module_index, int32 *val)
    uint8 *data_ptr;
    /* Get the IO map pointer from the ec_slave struct */
    data_ptr = ec_slave[slave_no].outputs;
+   *val = 0;
    /* Move pointer to correct module index */
    data_ptr += module_index * 2;
    /* Read value byte by byte since all targets can't handle misaligned
@@ -201,6 +204,7 @@ void get_output_int16(uint16 slave_no,uint8 module_index, uint16 *val)
 
    /* Get the IO map pointer from the ec_slave struct */
    data_ptr = ec_slave[slave_no].outputs;
+   *val = 0;
    /* Move pointer to correct module index */
    data_ptr += module_index * 2;
    /* Read value byte by byte since all targets can handle misaligned
@@ -434,7 +438,7 @@ void simpletest(char *ifname)
             osal_usleep(5000);
             uint16 speed = 100;
 
-            // set_output_int16(1, (0xE - 0xE) >> 1, 1); // CTL0 on
+            set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
             set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 3); // absolute position movement
             set_output_int16(1, (0x14 - 0xE) >> 1, speed); // 10 % speed
             set_output_int32(1, (0x18 - 0xE) >> 1, 3000); // move to position 200            
@@ -493,15 +497,15 @@ void simpletest(char *ifname)
             int i = 0;
             uint16 sys0 = 0;
             uint16 sys1 = 0;
-
+            int position = 1000;
             // speed = 100;
             // int j =0;
             while(i < 100000){
 
            
-               printf("SLAVE STATE IS:%d\n", ec_slave[0].state);
+               // printf("SLAVE STATE IS:%d\n", ec_slave[0].state);
 
-               printf("WKC %d\n", wkc );
+               // printf("WKC %d\n", wkc );
 
                get_input_int16(1,(0x4 - 0x0 )>> 1, &val);
                printf("VAL %d\n", val );
@@ -511,11 +515,12 @@ void simpletest(char *ifname)
 
                get_input_int16(1,(0x0002 - 0x0 )>> 1, &sys1);
                printf("SYS1 %d\n", sys1 );
+                  printf("ENCODER POSITION %d\n", enc );
 
                get_input_int16(1,(0x6 - 0x0 )>> 1, &alarm);
                printf("alarm %d\n", alarm );
 
-               get_output_int16(1,(0x14 - 0xE )>> 1, &movespeed);
+               get_output_int16(1,(0xE - 0xE )>> 1, &movespeed);
                printf("movespeed %u\n", movespeed );
 
                get_output_int32(1,(0x18 - 0xE )>> 1, &setpose);
@@ -526,21 +531,63 @@ void simpletest(char *ifname)
                printf("USER INPUT %c \n", user_input);
                   
                
-               if(user_input =='y'){
-                  // set_output_int16(1, (0xE - 0xE) >> 1, 1); // CTL0 on
-                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 1); // absolute position movement
+               if(user_input =='y' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 11); // absolute position movement
                   set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 100 % speed
-                  set_output_int32(1, (0x18 - 0xE) >> 1, 1000); // move to position 1000            
-                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 000000000000010  servo on
+                  // set_output_int32(1, (0x18 - 0xE) >> 1, position); // move to position 1000            
                   printf("INSTATE Y \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
                   ec_send_processdata();
                   wkc = ec_receive_processdata(EC_TIMEOUTRET);
                   osal_usleep(5000);
-                  user_input = 'p';
-                  
+                  user_input = 'i';
+                  // set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 0); // absolute position movement
+                  // // set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 100 % speed
+                  // // set_output_int32(1, (0x18 - 0xE) >> 1, position); // move to position 1000            
+                  // // printf("INSTATE Y \n");
+
+                  // set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  // ec_send_processdata();
+                  // wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  // osal_usleep(5000);
+                  position += 100;
                   }
 
-                if(user_input =='h'){
+                   if(user_input =='a' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 1); // absolute position movement
+                  set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 100 % speed
+                  set_output_int32(1, (0x18 - 0xE) >> 1, 20000); // move to position 1000            
+                  printf("INSTATE Y \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  ec_send_processdata();
+                  wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  osal_usleep(5000);
+                  user_input = 'i';
+
+                  }
+
+                  if(user_input =='b' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 1); // absolute position movement
+                  set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 100 % speed
+                  set_output_int32(1, (0x18 - 0xE) >> 1, 10000); // move to position 1000            
+                  printf("INSTATE Y \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  ec_send_processdata();
+                  wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  osal_usleep(5000);
+                  user_input = 'i';
+
+                  }
+ 
+ 
+
+                if(user_input =='h' && val >= 14){
                   // set_output_int16(1, (0xE - 0xE) >> 1, 1); // CTL0 on
                   set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 1); // absolute position movement
                   set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
@@ -549,24 +596,108 @@ void simpletest(char *ifname)
                   printf("HOMING \n");
                   ec_send_processdata();
                   wkc = ec_receive_processdata(EC_TIMEOUTRET);
-                  osal_usleep(5000);
+                  osal_usleep(50000);
+                  user_input = 'i';
+
                   
                   }     
                
-               
-               if(user_input =='n'){
-                  // set_output_int16(1, (0xE - 0xE) >> 1, 1); // CTL0 on
-                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 2); // absolute position movement
-                  set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
-                  set_output_int32(1, (0x18 - 0xE) >> 1, 2000); // move to position 200            
-                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+               if(user_input =='o' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 1); // absolute position movement
+                  // set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+                  set_output_int32(1, (0x18 - 0xE) >> 1, 3000); // move to position 200            
                   printf("IN STATE N \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  ec_send_processdata();
+                  wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  osal_usleep(5000);
+                  // user_input = 'i';
+
+
+                  }
+
+               if(user_input =='n' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 12); // absolute position movement
+                  // set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+                  set_output_int32(1, (0x18 - 0xE) >> 1, 4000); // move to position 200            
+                  printf("IN STATE N \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
                   ec_send_processdata();
                   wkc = ec_receive_processdata(EC_TIMEOUTRET);
                   osal_usleep(5000);
                   user_input = 'i';
+
+
                   }
              
+
+
+               if(user_input =='q' ){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 8); // absolute position movement
+                  // set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+                  // set_output_int32(1, (0x18 - 0xE) >> 1, 4000); // move to position 200            
+                  printf("IN STATE N \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  ec_send_processdata();
+                  wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  osal_usleep(5000);
+                  // user_input = 'i';
+
+
+                  }
+               if(user_input =='r' && val >= 14){
+                  // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+                  set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 3); // absolute position movement
+                  set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+                  // set_output_int32(1, (0x18 - 0xE) >> 1, 2000); // move to position 200            
+                  printf("IN STATE N \n");
+
+                  set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+                  ec_send_processdata();
+                  wkc = ec_receive_processdata(EC_TIMEOUTRET);
+                  osal_usleep(5000);
+                  user_input = 'i';
+
+                  }
+
+               if(user_input =='t' && val >= 14){
+               // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+               set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 2); // absolute position movement
+               set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+               // set_output_int32(1, (0x18 - 0xE) >> 1, 2000); // move to position 200            
+               printf("IN STATE N \n");
+
+               set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+               ec_send_processdata();
+               wkc = ec_receive_processdata(EC_TIMEOUTRET);
+               osal_usleep(5000);
+               user_input = 'i';
+
+
+               }
+
+
+                if(user_input =='i' && val >= 14){
+               // set_output_int16(1, (0x10 - 0xE) >> 1, 1); // CTL0 on
+               set_output_int16(1, (0x16 - 0xE) >> 1, (uint16) 0); // absolute position movement
+               // set_output_int16(1, (0x14 - 0xE) >> 1, 100); // 10 % speed
+               // set_output_int32(1, (0x18 - 0xE) >> 1, 2000); // move to position 200            
+               printf("IN STATE I \n");
+
+               set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
+               ec_send_processdata();
+               wkc = ec_receive_processdata(EC_TIMEOUTRET);
+               osal_usleep(5000);
+
+
+               }
+               set_output_int16(1, (0x12 - 0xE) >> 1, (uint16) 2); // 0000000000000010 start, servo on
                ec_send_processdata();
                wkc = ec_receive_processdata(EC_TIMEOUTRET);
                osal_usleep(5000);
